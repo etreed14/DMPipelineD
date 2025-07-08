@@ -52,7 +52,7 @@ Loop over every ticker seen in Stage A:
   ──────────────────────
   • Create whatever buckets/bullet headers are needed (Financials & Metrics, Edge/Tech, AI Use Cases, Valuation Anchors, …).
   • Unlimited bullet nesting — NOTHING is dropped.
-  • Add buckets and subpoenas until everything in transcript is covered 
+  • Add buckets and subpoints until everything in transcript is covered
   • Do *not* rewrite or merge with Stage A.
 
 Print every company’s section, then after the final company:
