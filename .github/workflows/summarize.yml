@@ -7,7 +7,7 @@ on:
   # auto-run when a new transcript is committed
   push:
     paths:
-      - 'Calls/**/*.txt'        # any Din…Transcript.txt under Calls/
+      - 'importTranscript/**/*.txt'    # raw transcripts land here
 
 permissions:
   contents: write              # only needed if you keep the commit step
