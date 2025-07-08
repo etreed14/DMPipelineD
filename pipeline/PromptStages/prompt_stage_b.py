@@ -1,12 +1,10 @@
-"""Stage B prompt logic."""
+# prompt_stage_b.py — Stage B (Quick Stats / Fact Ledger)
 
-from ..llm_calls import LLMClient
-from ..prompts import PROMPT_V9B
+from pipeline.prompts import promptV9b
+from pipeline.llm_calls import LLMClient
 
-
-def run(text: str, client: LLMClient) -> str:
-    messages = [
-        {"role": "system", "content": PROMPT_V9B},
-        {"role": "user", "content": text},
-    ]
-    return client.chat(messages)
+def run(transcript_txt: str, client: LLMClient) -> str:
+    """
+    Run Stage B (Fact Ledger) using promptV9b.
+    """
+    return client.chat(system_prompt=promptV9b, user_prompt=transcript_txt)
