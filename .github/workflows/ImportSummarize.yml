@@ -3,23 +3,23 @@ name: Import-and-Summarize
 on:
   push:
     paths:
-      - 'importTranscript/**/*.txt'      # raw drops
+      - 'importTranscript/**/*.txt'
   workflow_dispatch:
 
 permissions:
-  contents: write                        # needed for our git commit
+  contents: write            # we push the moved/summary files back
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
 
     steps:
-      # 1 ▸ checkout repo
+      # 1 ▸ checkout (depth 2 so git diff works)
       - uses: actions/checkout@v4
         with:
-            fetch-depth: 2        # pull current + previous commit so git diff works
+          fetch-depth: 2
 
-      # 2 ▸ set up Python
+      # 2 ▸ Python
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -27,65 +27,58 @@ jobs:
       # 3 ▸ install deps
       - run: pip install -r requirements.txt
 
-      # 4 ▸ Move new transcripts → Calls/… and remember paths
+      # 4 ▸ MOVE transcripts → Calls/YYYY/Month/DD/
       - name: Move transcript(s) into archive
         id: move
         shell: bash
         run: |
           set -e
-          TODAY=$(date +'%Y %B %d')
-          read YEAR MONTH DAY <<< "$TODAY"
-          DEST_DIR="Calls/${YEAR}/${MONTH}/${DAY}"
-          mkdir -p "${DEST_DIR}"
+          TODAY=$(date +'%Y %B %d'); read YEAR MONTH DAY <<< "$TODAY"
+          DEST_DIR="Calls/${YEAR}/${MONTH}/${DAY}"; mkdir -p "$DEST_DIR"
 
-          MOVED=""
-          for f in $(git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} \
-                     | grep '^importTranscript/.*\.txt$'); do
-            BASENAME=$(basename "$f")
-            NEW_NAME="Din$(date +'%#m')-$(date +'%#d')Transcript.txt"
-            git mv "$f" "${DEST_DIR}/${NEW_NAME}"
-            MOVED="${MOVED} ${DEST_DIR}/${NEW_NAME}"
-          done
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "${MOVED}"   >> $GITHUB_OUTPUT
-          echo "EOF"        >> $GITHUB_OUTPUT
+          > moved.txt
+          git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} \
+            | grep '^importTranscript/.*\.txt$' | while IFS= read -r SRC; do
+              [ -z "$SRC" ] && continue
+              NEW="Din$(date +'%#m')-$(date +'%#d')Transcript.txt"
+              git mv "$SRC" "${DEST_DIR}/${NEW}"
+              printf '%s\n' "${DEST_DIR}/${NEW}" >> moved.txt
+            done
 
-      # 5 ▸ Commit the move so importTranscript becomes empty
-      - name: Commit moved file(s)
-        run: |
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          cat moved.txt >> "$GITHUB_OUTPUT"
+          echo "EOF"       >> "$GITHUB_OUTPUT"
+
+      # 5 ▸ commit the move
+      - run: |
           git config user.name  "Summary Bot"
           git config user.email "actions@github.com"
           git commit -am "🚚 Archive new transcript(s)" || echo "Nothing to commit"
           git push
 
-      # 6 ▸ Run pipeline on each moved transcript
+      # 6 ▸ RUN pipeline on each moved file
       - name: Run pipeline
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         shell: bash
         run: |
-          set -eo pipefail
-          # write matching files (one per line) to filelist.txt
-          git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} \
-            | grep '^importTranscript/.*\.txt$' > filelist.txt || true
-
-          while IFS= read -r f; do
-            [ -z "$f" ] && continue           # skip empty lines
+          set -e
+          IFS=$'\n'
+          for f in ${{ steps.move.outputs.files }}; do
+            [ -z "$f" ] && continue
             TITLE=$(basename "$f" | sed 's/Transcript\.txt$/Summary/')
-            echo "▶️  Running pipeline on $f  →  title=$TITLE"
+            echo "▶️  $f  →  $TITLE"
             python -m pipeline.run_pipeline --file "$f" --title "$TITLE"
-          done < filelist.txt
+          done
 
-      # 7 ▸ Commit generated HTML
-      - name: Commit summary HTML
-        run: |
+      # 7 ▸ commit HTML summary
+      - run: |
           git add Calls/**/*.html || exit 0
           git commit -m "📝 Auto-generated summary" || echo "Nothing to commit"
           git push
 
-      # 8 ▸ Upload artifact
-      - name: Upload summaries
-        uses: actions/upload-artifact@v4
+      # 8 ▸ upload artifact
+      - uses: actions/upload-artifact@v4
         with:
           name: MeetingSummary
           path: Calls/**/*.html
