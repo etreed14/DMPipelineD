@@ -1,63 +1,52 @@
 """
-formatter.py — bullet splitter + HTML builder
+formatter.py — bullet splitter + dark-mode HTML builder
 """
 
 import html
+import re
+from pathlib import Path
 
-def split_bullets(stage_a_text: str) -> str:
+_SPLIT_RE = re.compile(r"\s*(?:;| and | but )\s*", flags=re.I)
+
+def split_bullets(text: str) -> str:
     """
-    Split multi-idea Stage A bullets using ; / and / but
-    and indent supporting lines under the first.
+    For each bullet line, if it contains multiple ideas joined by
+    ';', ' and ', or ' but ', split into two lines and indent the
+    latter with 4 spaces + bullet.
     """
     out = []
-    for line in stage_a_text.splitlines():
-        if " ; " in line or " and " in line or " but " in line:
-            parts = line.strip().split(" ; ")
-            if len(parts) == 1:
-                parts = line.strip().split(" and ")
-            if len(parts) == 1:
-                parts = line.strip().split(" but ")
-            out.append(parts[0].strip())
-            for sub in parts[1:]:
-                out.append("    • " + sub.strip())
+    for ln in text.splitlines():
+        if any(tok in ln for tok in (" ; ", " and ", " but ")):
+            first, rest = _SPLIT_RE.split(ln, 1)
+            out.append(first.strip())
+            out.append("    • " + rest.strip())
         else:
-            out.append(line.strip())
+            out.append(ln.rstrip())
     return "\n".join(out)
+
+# ---------------------------------------------------------------------
+# Dark-mode HTML template
+# ---------------------------------------------------------------------
+
+_CSS = (
+    "body{background:#000;color:#fff;font-family:Arial,sans-serif;"
+    "line-height:1.5;padding:40px}"
+    "h2.hdr{font-size:22px;font-weight:bold;margin:30px 0 10px}"
+    "h2.hdr .ticker{font-size:24px;font-weight:bold;color:#fff}"
+    "h2.hdr .rest{font-size:20px;font-weight:normal;color:#fff}"
+    "pre{white-space:pre-wrap;font-size:16px}"
+)
 
 def build_html(title: str, body: str) -> str:
     """
-    Wrap the merged summary (Stage E output) in dark HTML.
+    Return a full <!DOCTYPE html> document in dark mode.
+    Body is escaped to avoid accidental HTML injection.
     """
     safe_body = html.escape(body)
-    styled_body = safe_body.replace("\n", "<br>\n")  # preserve line breaks
-    return f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8">
-<style>
-  body {{
-    background:#000;
-    color:#fff;
-    font-family:Arial,sans-serif;
-    line-height:1.5;
-    padding:40px;
-  }}
-  h2.hdr {{
-    font-size:22px;
-    font-weight:bold;
-    margin:30px 0 10px;
-  }}
-  .ticker {{
-    font-size:24px;
-    font-weight:bold;
-    color:#fff;
-  }}
-  .rest {{
-    font-size:20px;
-    font-weight:normal;
-    color:#fff;
-  }}
-</style>
-<title>{title}</title>
-</head>
-<body>{styled_body}</body></html>
-"""
+    return (
+        "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+        f"<title>{html.escape(title)}</title>"
+        f"<style>{_CSS}</style></head><body>"
+        f"<h1>{html.escape(title)}</h1>\n<pre>{safe_body}</pre>"
+        "</body></html>"
+    )
