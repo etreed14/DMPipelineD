@@ -60,9 +60,7 @@ def run_pipeline(input_path: Path, title: str) -> None:
 
     # ── 4 · Build & save dark-mode HTML ───────────────────────────────────
     html = formatter.build_html(title=title, body=e_out)
-    output_path = input_path.with_name(
-        input_path.stem.replace("Transcript", title) + ".html"
-    )
+    output_path = input_path.with_suffix(".html")
     output_path.write_text(html, encoding="utf-8")
 
     print(f"✅ Pipeline complete — HTML saved to:\n{output_path.resolve()}")
