@@ -25,7 +25,7 @@ from pipeline.PromptStages import (
 
 def process_file(input_path: Path, title: str) -> str:
     """Simplified pipeline used for unit tests."""
-    client = LLMClient()
+    client = LLMClient(model="gpt-4o")
     text = input_path.read_text()
     result = client.chat("You are an analyst.", text)  # ✅ 2 arguments now
     parts = result.split("\n", 1)
@@ -36,6 +36,7 @@ def process_file(input_path: Path, title: str) -> str:
 
 def run_pipeline(input_path: Path, title: str) -> None:
     # ── Run pipeline and save output HTML ─────────────────────────────────-
+    client = LLMClient(model="gpt-4o")
     html = process_file(input_path, title)
     output_path = input_path.with_suffix(".html")
     output_path.write_text(html, encoding="utf-8")
