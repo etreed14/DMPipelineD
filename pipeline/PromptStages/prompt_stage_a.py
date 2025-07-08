@@ -1,12 +1,10 @@
-"""Stage A prompt logic."""
+# prompt_stage_a.py — Stage A (Narrative Summary)
 
-from ..llm_calls import LLMClient
-from ..prompts import PROMPT_V9A
+from pipeline.prompts import promptV9a
+from pipeline.llm_calls import LLMClient
 
-
-def run(text: str, client: LLMClient) -> str:
-    messages = [
-        {"role": "system", "content": PROMPT_V9A},
-        {"role": "user", "content": text},
-    ]
-    return client.chat(messages)
+def run(transcript_txt: str, client: LLMClient) -> str:
+    """
+    Run Stage A (Narrative Summary) using promptV9a.
+    """
+    return client.chat(system_prompt=promptV9a, user_prompt=transcript_txt)
