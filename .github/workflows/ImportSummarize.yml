@@ -40,7 +40,23 @@ jobs:
           git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} \
             | grep '^importTranscript/.*\.txt$' | while IFS= read -r SRC; do
               [ -z "$SRC" ] && continue
-              NEW="Din$(date +'%#m')-$(date +'%#d')Transcript.txt"
+
+              # build base name: din0708Transcript.txt
+              MONTH=$(date +'%m')
+              DAY=$(date +'%d')
+              BASE="din${MONTH}${DAY}Transcript"
+
+              # add A / B / C if filename already exists
+              suffix=""
+              while [ -e "${DEST_DIR}/${BASE}${suffix}.txt" ]; do
+                if [ -z "$suffix" ]; then
+                  suffix="A"
+                else
+                  suffix=$(echo "$suffix" | tr 'A-Y' 'B-Z')
+                fi
+              done
+
+              NEW="${BASE}${suffix}.txt"           # final name
               git mv "$SRC" "${DEST_DIR}/${NEW}"
               printf '%s\n' "${DEST_DIR}/${NEW}" >> moved.txt
             done
