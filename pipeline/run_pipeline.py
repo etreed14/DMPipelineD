@@ -1,5 +1,5 @@
 """
-run_pipeline.py — CLI entrypoint (GPT-3.5-turbo edition)
+run_pipeline.py — CLI entry-point (GPT-3.5-turbo, delimiter-safe)
 
 Usage:
     python -m pipeline.run_pipeline \
@@ -21,13 +21,13 @@ from pipeline.PromptStages import (
 
 
 def run_pipeline(input_path: Path, title: str) -> None:
-    # --- 1 · Load transcript -------------------------------------------------
+    # ── 1 · Load transcript ────────────────────────────────────────────────
     transcript = input_path.read_text(encoding="utf-8").strip()
 
-    # --- 2 · Shared LLM client (GPT-3.5-turbo) -------------------------------
+    # ── 2 · Shared LLM client (GPT-3.5-turbo) ──────────────────────────────
     client = LLMClient(model="gpt-3.5-turbo")
 
-    # --- 3 · Run Stages A-E --------------------------------------------------
+    # ── 3 · Run Stages A-E ─────────────────────────────────────────────────
     print("🟡 Stage A …")
     a_out = prompt_stage_a.run(transcript, client)
     print("🟢 Stage A ✔\n")
@@ -36,8 +36,13 @@ def run_pipeline(input_path: Path, title: str) -> None:
     b_out = prompt_stage_b.run(transcript, client)
     print("🟢 Stage B ✔\n")
 
+    # Add explicit delimiters so Stage C can align bullets accurately
+    merged_input = (
+        "### STAGE A ###\n" + a_out.strip() +
+        "\n\n### STAGE B ###\n" + b_out.strip()
+    )
+
     print("🟡 Stage C …")
-    merged_input = f"{a_out}\n\n{b_out}"
     c_out = prompt_stage_c.run(merged_input, client)
     print("🟢 Stage C ✔\n")
 
@@ -49,7 +54,7 @@ def run_pipeline(input_path: Path, title: str) -> None:
     e_out = prompt_stage_e.run(d_out, client)
     print("🟢 Stage E ✔\n")
 
-    # --- 4 · Build & save HTML ----------------------------------------------
+    # ── 4 · Build & save HTML ──────────────────────────────────────────────
     html = formatter.build_html(title=title, body=e_out)
     output_path = input_path.with_name(
         input_path.stem.replace("Transcript", title) + ".html"
@@ -60,8 +65,8 @@ def run_pipeline(input_path: Path, title: str) -> None:
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("--file", required=True, help="Din7-8Transcript.txt path")
-    p.add_argument("--title", required=True, help="Meeting title (e.g. SportsBetting)")
-    args = p.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file", required=True, help="Path to Din7-8Transcript.txt")
+    parser.add_argument("--title", required=True, help="Meeting title (e.g. SportsBetting)")
+    args = parser.parse_args()
     run_pipeline(Path(args.file), args.title)
