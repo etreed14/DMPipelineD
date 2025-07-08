@@ -16,6 +16,8 @@ jobs:
     steps:
       # 1 ▸ checkout repo
       - uses: actions/checkout@v4
+        with:
+            fetch-depth: 2        # pull current + previous commit so git diff works
 
       # 2 ▸ set up Python
       - uses: actions/setup-python@v5
