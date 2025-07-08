@@ -7,7 +7,7 @@ import time
 import openai
 import tiktoken
 from openai import RateLimitError
-from openai import RateLimitError, APIError, InvalidRequestError
+from openai import RateLimitError, APIError, BadRequestError as InvalidRequestError
 # ---------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------
