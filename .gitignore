@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+pipeline/working/*
+!pipeline/working/.gitkeep
+importTranscript/*
+!importTranscript/.gitkeep
