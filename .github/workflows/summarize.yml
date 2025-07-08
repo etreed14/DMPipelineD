@@ -1,0 +1,63 @@
+name: Summarize meeting
+
+on:
+  # manual trigger
+  workflow_dispatch:
+
+  # auto-run when a new transcript is committed
+  push:
+    paths:
+      - 'Calls/**/*.txt'        # any Din…Transcript.txt under Calls/
+
+permissions:
+  contents: write              # only needed if you keep the commit step
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1 ▸ checkout repo
+      - uses: actions/checkout@v4
+
+      # 2 ▸ Python 3.11
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3 ▸ install deps
+      - name: Install requirements
+        run: |
+          pip install -r requirements.txt
+
+      # 4 ▸ run pipeline on each new transcript
+      - name: Run pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL:   ${{ secrets.OPENAI_MODEL }}   # optional override
+        run: |
+          set -e
+          # list .txt files added in this push
+          FILES=$(git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} | \
+                  grep -E 'Calls/.+Transcript\.txt$' || true)
+          for f in $FILES; do
+            TITLE=$(basename "$f" | sed 's/Transcript\.txt$/Summary/')
+            echo "▶️  Processing $f  →  title=$TITLE"
+            python -m pipeline.run_pipeline --file "$f" --title "$TITLE"
+          done
+
+      # 5 ▸ upload HTML output(s) as artifact
+      - name: Upload summaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeetingSummary
+          path: Calls/**/*.html
+
+      # 6 ▸ OPTIONAL—commit HTML back to repo
+      # - name: Commit summaries
+      #   run: |
+      #     git config user.name  "Summary Bot"
+      #     git config user.email "actions@github.com"
+      #     git add Calls/**/*.html || exit 0
+      #     git commit -m "📝 Auto-generated meeting summary" || echo "Nothing to commit"
+      #     git push
