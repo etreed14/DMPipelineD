@@ -35,12 +35,35 @@ def process_file(input_path: Path, title: str) -> str:
 
 
 def run_pipeline(input_path: Path, title: str) -> None:
-    # ── Run pipeline and save output HTML ─────────────────────────────────-
+    from pipeline.utils import compress_transcript
+    transcript = compress_transcript(input_path.read_text(encoding="utf-8"))
     client = LLMClient(model="gpt-4o")
-    html = process_file(input_path, title)
-    output_path = input_path.with_suffix(".html")
-    output_path.write_text(html, encoding="utf-8")
 
+    print("🟡 Stage A …")
+    a_out = prompt_stage_a.run(transcript, client)
+    print("🟢 Stage A ✔")
+
+    print("🟡 Stage B …")
+    b_out = prompt_stage_b.run(transcript, client)
+    print("🟢 Stage B ✔")
+
+    merged = f"### STAGE A ###\n{a_out.strip()}\n\n### STAGE B ###\n{b_out.strip()}"
+
+    print("🟡 Stage C …")
+    c_out = prompt_stage_c.run(merged, client)
+    print("🟢 Stage C ✔")
+
+    print("🟡 Stage D …")
+    d_out = prompt_stage_d.run(c_out, client)
+    print("🟢 Stage D ✔")
+
+    print("🟡 Stage E …")
+    e_out = prompt_stage_e.run(d_out, client)
+    print("🟢 Stage E ✔")
+
+    html = formatter.build_html(title=title, body=e_out)
+    output_path = input_path.with_name(input_path.stem.replace("Transcript", title) + ".html")
+    output_path.write_text(html, encoding="utf-8")
     print(f"✅ Pipeline complete — HTML saved to:\n{output_path.resolve()}")
 
 
