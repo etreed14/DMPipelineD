@@ -1,12 +1,16 @@
 """
-run_pipeline.py — CLI entrypoint to run all 5 stages
+run_pipeline.py — CLI entrypoint (GPT-3.5-turbo edition)
+
+Usage:
+    python -m pipeline.run_pipeline \
+        --file Calls/2025/July/08/Din7-8Transcript.txt \
+        --title SportsBetting
 """
 
-import argparse, datetime
+import argparse
 from pathlib import Path
 from pipeline.llm_calls import LLMClient
 from pipeline import formatter
-from pipeline.prompts import promptV9c
 from pipeline.PromptStages import (
     prompt_stage_a,
     prompt_stage_b,
@@ -15,45 +19,49 @@ from pipeline.PromptStages import (
     prompt_stage_e,
 )
 
-def run_pipeline(input_path: Path, title: str) -> None:
-    client = LLMClient()
 
-    # Load transcript
+def run_pipeline(input_path: Path, title: str) -> None:
+    # --- 1 · Load transcript -------------------------------------------------
     transcript = input_path.read_text(encoding="utf-8").strip()
 
-    print("🟡 Running Stage A...")
+    # --- 2 · Shared LLM client (GPT-3.5-turbo) -------------------------------
+    client = LLMClient(model="gpt-3.5-turbo")
+
+    # --- 3 · Run Stages A-E --------------------------------------------------
+    print("🟡 Stage A …")
     a_out = prompt_stage_a.run(transcript, client)
-    print("🟢 Stage A complete")
+    print("🟢 Stage A ✔\n")
 
-    print("🟡 Running Stage B...")
+    print("🟡 Stage B …")
     b_out = prompt_stage_b.run(transcript, client)
-    print("🟢 Stage B complete")
+    print("🟢 Stage B ✔\n")
 
-    print("🟡 Running Stage C...")
-    merged_input = a_out + "\n\n" + b_out
+    print("🟡 Stage C …")
+    merged_input = f"{a_out}\n\n{b_out}"
     c_out = prompt_stage_c.run(merged_input, client)
-    print("🟢 Stage C complete")
+    print("🟢 Stage C ✔\n")
 
-    print("🟡 Running Stage D...")
+    print("🟡 Stage D …")
     d_out = prompt_stage_d.run(c_out, client)
-    print("🟢 Stage D complete")
+    print("🟢 Stage D ✔\n")
 
-    print("🟡 Running Stage E...")
+    print("🟡 Stage E …")
     e_out = prompt_stage_e.run(d_out, client)
-    print("🟢 Stage E complete")
+    print("🟢 Stage E ✔\n")
 
-    # Format final HTML
+    # --- 4 · Build & save HTML ----------------------------------------------
     html = formatter.build_html(title=title, body=e_out)
-
-    # Save output next to input file
-    output_path = input_path.with_name(input_path.stem.replace("Transcript", title) + ".html")
+    output_path = input_path.with_name(
+        input_path.stem.replace("Transcript", title) + ".html"
+    )
     output_path.write_text(html, encoding="utf-8")
 
-    print(f"✅ Done — saved to:\n{output_path.absolute()}")
+    print(f"✅ Pipeline complete — HTML saved to:\n{output_path.resolve()}")
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--file", required=True, help="Path to Din7-8Transcript.txt")
-    p.add_argument("--title", required=True, help="Final output title, e.g. SportsBetting")
+    p.add_argument("--file", required=True, help="Din7-8Transcript.txt path")
+    p.add_argument("--title", required=True, help="Meeting title (e.g. SportsBetting)")
     args = p.parse_args()
-    run_pipeline(Path(args.file), title=args.title)
+    run_pipeline(Path(args.file), args.title)
