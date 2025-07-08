@@ -62,12 +62,17 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         shell: bash
         run: |
-          set -e
-          for f in ${{ steps.move.outputs.files }}; do
+          set -eo pipefail
+          # write matching files (one per line) to filelist.txt
+          git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} \
+            | grep '^importTranscript/.*\.txt$' > filelist.txt || true
+
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue           # skip empty lines
             TITLE=$(basename "$f" | sed 's/Transcript\.txt$/Summary/')
             echo "▶️  Running pipeline on $f  →  title=$TITLE"
             python -m pipeline.run_pipeline --file "$f" --title "$TITLE"
-          done
+          done < filelist.txt
 
       # 7 ▸ Commit generated HTML
       - name: Commit summary HTML
