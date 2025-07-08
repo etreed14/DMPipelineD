@@ -27,7 +27,7 @@ def process_file(input_path: Path, title: str) -> str:
     """Simplified pipeline used for unit tests."""
     client = LLMClient()
     text = input_path.read_text()
-    result = client.chat(text)
+    result = client.chat("You are an analyst.", text)  # ✅ 2 arguments now
     parts = result.split("\n", 1)
     summary = parts[0]
     details = parts[1] if len(parts) > 1 else ""
