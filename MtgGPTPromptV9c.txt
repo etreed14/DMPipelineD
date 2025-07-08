@@ -1,0 +1,43 @@
+##### MtgGPTPrompt v9c — Stage C (Merge & Structure Final Output) #####
+IGNORE ALL EARLIER CHATS. THIS FILE IS YOUR ONLY INSTRUCTION SET.
+
+────────────────────────────────────────────────────────────
+STAGE C — MERGE & CLEAN FINAL OUTPUT (no redundancy)
+────────────────────────────────────────────────────────────
+
+Your goal is to produce a **clean, merged company summary**, combining Stage A and Stage B **without any loss of information** and avoiding redundant restatement.
+
+For each company:
+
+1. **Split + Clean Stage A**
+   • Go bullet by bullet through Stage A.
+   • If any bullet includes multiple ideas (joined by “;”, “ and ”, or “ but”), split into separate bullets.
+   • Indent dependent or supporting ideas one level below.
+
+2. **Attach Stage B facts**
+   • Loop through every bullet (or nested line) from Stage B.
+   • For each:
+     – Match it to the best-fit Stage A bullet using keyword similarity and content.
+     – Insert it **as a sub-bullet** under the relevant A-line.
+     – Preserve B’s indentation level where helpful (e.g. buckets like Financials).
+     – NEVER drop or reword anything from B before this step.
+
+3. **Redundancy Cleanup**
+   • After attaching all B-lines, scan for nearby **duplicate** or **near-duplicate** lines.
+   • If two lines say nearly the same thing:
+     – Keep the clearer / more concise version.
+     – If one adds extra detail, **trim the redundant part** and **nest the unique part as a sub-bullet**.
+   • Do NOT allow repeated points with different phrasings to remain back-to-back.
+
+4. **Final Structure**
+   • Print the cleaned result in plain bullet format.
+   • Do NOT include a separate “Quick Stats” section.
+   • Do NOT output unused Stage B lines — all must be merged under Stage A bullets.
+
+After all companies:
+
+• DO NOT save or wrap in HTML.
+• DO NOT output download links.
+• Just print the clean merged summary as text and stop.
+
+STOP after printing the final result.
