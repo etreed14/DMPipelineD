@@ -19,3 +19,10 @@ Title line (CamelCase)
 • Summary bullets
 ...
 """
+
+# lowercase aliases expected by other modules
+promptV9a = PROMPT_V9A
+# promptV9b = PROMPT_V9B
+# promptV9c = PROMPT_V9C
+# promptV9d = PROMPT_V9D
+# promptV9e = PROMPT_V9E
