@@ -14,7 +14,7 @@ def run_pipeline(input_path: Path, title: str) -> None:
     transcript = compress_transcript(raw_text)
 
     # 2. Save cleaned transcript as ...Transcript.txt
-    cleaned_path = input_path.with_name(input_path.name.replace(".txt", "Transcript.txt"))
+    cleaned_path = input_path.with_name("din0709Transcript.txt")
     cleaned_path.write_text(transcript, encoding="utf-8")
     print(f"📄 Cleaned transcript saved to: {cleaned_path}")
 
@@ -24,8 +24,8 @@ def run_pipeline(input_path: Path, title: str) -> None:
 
     # 4. Save clean HTML (light-mode summary only)
     html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>{title}</title></head>
-<body><h1>{title}</h1><pre>{result.strip()}</pre></body></html>"""
+    <html><head><meta charset="utf-8"><title>{title}</title></head>
+    <body><h1>{title}</h1><pre>{result.strip()}</pre></body></html>"""
 
     base = input_path.stem.replace("Transcript", "Sum")
     out_path = input_path.with_name(f"{base}.html")
