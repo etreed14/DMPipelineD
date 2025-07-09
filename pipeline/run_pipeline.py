@@ -22,7 +22,8 @@ def run_pipeline(input_path: Path, title: str) -> None:
 <html><head><meta charset="utf-8"><title>{title}</title></head>
 <body><h1>{title}</h1><pre>{result.strip()}</pre></body></html>"""
 
-    out_path = input_path.with_suffix(".html")
+    base = input_path.stem.replace("Transcript", "Sum")
+    out_path = input_path.with_name(f"{base}.html")
     out_path.write_text(html, encoding="utf-8")
     print(f"✅ Summary saved to: {out_path.resolve()}")
 
