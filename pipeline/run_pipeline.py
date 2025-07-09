@@ -20,7 +20,7 @@ def run_pipeline(input_path: Path, title: str) -> None:
     # 2. Build file base: e.g., din0709 + SportsBetting
     stem = input_path.stem  # e.g., din0709TranscriptA
     prefix = stem[:7]       # e.g., din0709
-    camel_title = generated_title  # use the model's title
+    camel_title = generated_title if 'generated_title' in locals() else title  # use the model's title
 
     # 3. Save cleaned transcript as din0709TrscptSportsBetting.txt
     cleaned_name = f"{prefix}Trscpt{camel_title}.txt"
