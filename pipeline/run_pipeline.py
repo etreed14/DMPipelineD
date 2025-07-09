@@ -31,6 +31,9 @@ def run_pipeline(input_path: Path, title: str) -> None:
     # 4. Run Stage A
     client = LLMClient(model="gpt-4o")
     result = client.chat(promptV9a, transcript)
+    lines = result.strip().split("\n", 1)
+    generated_title = lines[0].strip().replace(" ", "")  # remove extra spaces
+    summary = lines[1].strip() if len(lines) > 1 else ""
 
     # 5. Save plain summary as din0709SportsBetting.html
     summary_name = f"{prefix}{camel_title}.html"
