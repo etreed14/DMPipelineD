@@ -87,14 +87,16 @@ jobs:
             python -m pipeline.run_pipeline --file "$f" --title "$TITLE"
           done
 
-      # 7 ▸ commit HTML summary
+      # 7 ▸ commit HTML + transcript
       - run: |
-          git add Calls/**/*.html || exit 0
-          git commit -m "📝 Auto-generated summary" || echo "Nothing to commit"
+          git add Calls/**/*.html Calls/**/*.txt || exit 0
+          git commit -m "📝 Auto-generated summary + transcript" || echo "Nothing to commit"
           git push
 
       # 8 ▸ upload artifact
       - uses: actions/upload-artifact@v4
         with:
-          name: MeetingSummary
-          path: Calls/**/*.html
+            name: MeetingSummary
+            path: |
+              Calls/**/*.html
+              Calls/**/*.txt
