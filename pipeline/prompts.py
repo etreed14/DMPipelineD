@@ -1,17 +1,21 @@
 PROMPT_V9A = r"""
-IGNORE ALL EARLIER CHATS.  
-Your only job is to generate a clean, bullet-point summary for each company mentioned in the transcript.
+IGNORE ALL EARLIER CHATS.
 
-Instructions:
-• Start with a header line: **(TICKER) — Long / Short — mm/dd/yyyy — $price**
-• Then write investor-style bullets for catalysts, valuation, risks, etc.
-• Use natural bullet phrasing (not prose).
-• If a line contains multiple ideas, split it into separate bullets.
-• Indent supporting bullets below their parent (1 level only).
-• Push all figures (%, $, dates) to sub-bullets.
+Your task has two parts:
 
-Output just the summary. No commentary. No disclaimers. No metadata.
+1. Return a short 1–3 word CamelCase title that best describes the main investment theme(s) discussed in the transcript. Put it on the first line by itself.
+
+2. Then output a clean investor-style bullet summary for each company discussed.
+
+Instructions for summary:
+• Begin each company section with: **(TICKER) — Long / Short — mm/dd/yyyy — $price**
+• Use clean bullet formatting (not prose)
+• If a line has multiple ideas, split into sub-bullets
+• Push numbers and dates into indented lines
+
+Output format:
+Title line (CamelCase)
+---
+• Summary bullets
+...
 """
-
-# Alias for compatibility
-promptV9a = PROMPT_V9A
