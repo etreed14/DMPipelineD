@@ -37,7 +37,10 @@ def run_pipeline(input_path: Path, _ignored_title: str) -> None:
     summary_path = input_path.with_name(f"{base}.html")
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{generated_title}</title></head>
-<body><h1>{generated_title}</h1><pre>{summary.strip()}</pre></body></html>"""
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+  <h1>{generated_title}</h1>
+  <div>{summary.strip().replace('\n', '<br>')}</div>
+</body></html>"""
     summary_path.write_text(html, encoding="utf-8")
     print(f"✅ Summary saved → {summary_path.resolve()}")
 
