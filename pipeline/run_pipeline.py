@@ -22,6 +22,7 @@ def run_pipeline(input_path: Path, _ignored_title: str) -> None:
     generated_title, summary = lines
     generated_title = generated_title.strip().replace(" ", "")
     print(f"🏷️  Model-generated title: {generated_title}")
+    print("📝 GPT summary output:\n" + summary.strip())
 
     # 3. Build filename base from original prefix + title
     prefix = input_path.stem[:7]  # e.g. din0709
