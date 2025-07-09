@@ -1,11 +1,15 @@
-# run_pipeline.py — Stage A only (with compression, cleaned output, summary HTML)
+# run_pipeline.py — Stage A only, with compressed transcript + summary naming
 
 import argparse
 from pathlib import Path
-
 from pipeline.llm_calls import LLMClient
 from pipeline.prompts import promptV9a
 from pipeline.utils import compress_transcript
+
+
+def to_camel(title: str) -> str:
+    """Convert 'sports betting' → 'SportsBetting'"""
+    return "".join(word.capitalize() for word in title.strip().split())
 
 
 def run_pipeline(input_path: Path, title: str) -> None:
@@ -13,29 +17,36 @@ def run_pipeline(input_path: Path, title: str) -> None:
     raw_text = input_path.read_text(encoding="utf-8")
     transcript = compress_transcript(raw_text)
 
-    # 2. Save cleaned transcript as ...Transcript.txt
-    cleaned_path = input_path.with_name("din0709Transcript.txt")
+    # 2. Build file base: e.g., din0709 + SportsBetting
+    stem = input_path.stem  # e.g., din0709TranscriptA
+    prefix = stem[:7]       # e.g., din0709
+    camel_title = to_camel(title)
+
+    # 3. Save cleaned transcript as din0709TrscptSportsBetting.txt
+    cleaned_name = f"{prefix}Trscpt{camel_title}.txt"
+    cleaned_path = input_path.with_name(cleaned_name)
     cleaned_path.write_text(transcript, encoding="utf-8")
     print(f"📄 Cleaned transcript saved to: {cleaned_path}")
 
-    # 3. Run Stage A
+    # 4. Run Stage A
     client = LLMClient(model="gpt-4o")
     result = client.chat(promptV9a, transcript)
 
-    # 4. Save clean HTML (light-mode summary only)
-    html = f"""<!DOCTYPE html>
-    <html><head><meta charset="utf-8"><title>{title}</title></head>
-    <body><h1>{title}</h1><pre>{result.strip()}</pre></body></html>"""
+    # 5. Save plain summary as din0709SportsBetting.html
+    summary_name = f"{prefix}{camel_title}.html"
+    summary_path = input_path.with_name(summary_name)
 
-    base = input_path.stem.replace("Transcript", "Sum")
-    out_path = input_path.with_name(f"{base}.html")
-    out_path.write_text(html, encoding="utf-8")
-    print(f"✅ Summary saved to: {out_path.resolve()}")
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>{camel_title}</title></head>
+<body><h1>{camel_title}</h1><pre>{result.strip()}</pre></body></html>"""
+
+    summary_path.write_text(html, encoding="utf-8")
+    print(f"✅ Summary saved to: {summary_path.resolve()}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file",  required=True, help="Path to transcript text file")
-    parser.add_argument("--title", required=True, help="Title for HTML output")
+    parser.add_argument("--file",  required=True, help="Path to transcript .txt file")
+    parser.add_argument("--title", required=True, help="Short summary title (e.g. Sports Betting)")
     args = parser.parse_args()
     run_pipeline(Path(args.file), args.title)
