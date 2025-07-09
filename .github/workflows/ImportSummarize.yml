@@ -85,6 +85,8 @@ jobs:
             TITLE=$(basename "$f" | sed 's/Transcript\.txt$/Summary/')
             echo "▶️  $f  →  $TITLE"
             python -m pipeline.run_pipeline --file "$f" --title "$TITLE"
+            echo "🗑️  Removing original transcript: $f"
+            rm "$f"
           done
 
       # 7 ▸ commit HTML + transcript
