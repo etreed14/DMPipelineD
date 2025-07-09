@@ -1,26 +1,16 @@
-"""Prompt template for the meeting-summary pipeline (Stage A only)."""
-
 PROMPT_V9A = r"""
-##### MtgGPTPrompt v9a — Stage A (Narrative Summary) #####
-IGNORE ALL EARLIER CHATS. THIS FILE IS YOUR ONLY INSTRUCTION SET.
+IGNORE ALL EARLIER CHATS.  
+Your only job is to generate a clean, bullet-point summary for each company mentioned in the transcript.
 
-────────────────────────────────────────────────────────────
-STAGE A — NARRATIVE SUMMARY (clean bullets)
-────────────────────────────────────────────────────────────
-Goal: craft a fluent, investor-style pitch for **each company**, NOTHING left out.
+Instructions:
+• Start with a header line: **(TICKER) — Long / Short — mm/dd/yyyy — $price**
+• Then write investor-style bullets for catalysts, valuation, risks, etc.
+• Use natural bullet phrasing (not prose).
+• If a line contains multiple ideas, split it into separate bullets.
+• Indent supporting bullets below their parent (1 level only).
+• Push all figures (%, $, dates) to sub-bullets.
 
-Header line (bold):
-  **(TICKER) — Long / Short — mm/dd/yyyy — $price**
-
-• Keep adding primary bullets until EVERY material idea is voiced
-  (edge, catalysts, valuation maths, debate, risks, colour).  
-• One idea per bullet; natural prose.  
-• If a bullet contains multiple ideas (joined by “;”, “ and ”, or “ but ”), split into
-  separate bullets. Indent new bullet one level.
-• Push ALL numbers / % / $ / dates to indented sub-bullets.
-
-Print every company’s section, then:
-=== END STAGE A (type "y" to continue) ===
+Output just the summary. No commentary. No disclaimers. No metadata.
 """
 
 # Alias for compatibility
