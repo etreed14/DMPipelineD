@@ -1,4 +1,4 @@
-# run_pipeline.py — Minimal Stage A-only version (clean HTML + compression)
+# run_pipeline.py — Stage A only (with compression, cleaned output, summary HTML)
 
 import argparse
 from pathlib import Path
@@ -13,11 +13,16 @@ def run_pipeline(input_path: Path, title: str) -> None:
     raw_text = input_path.read_text(encoding="utf-8")
     transcript = compress_transcript(raw_text)
 
-    # 2. Run Stage A only
+    # 2. Save cleaned transcript as ...Transcript.txt
+    cleaned_path = input_path.with_name(input_path.name.replace(".txt", "Transcript.txt"))
+    cleaned_path.write_text(transcript, encoding="utf-8")
+    print(f"📄 Cleaned transcript saved to: {cleaned_path}")
+
+    # 3. Run Stage A
     client = LLMClient(model="gpt-4o")
     result = client.chat(promptV9a, transcript)
 
-    # 3. Save clean HTML (light mode, no dark styling)
+    # 4. Save clean HTML (light-mode summary only)
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{title}</title></head>
 <body><h1>{title}</h1><pre>{result.strip()}</pre></body></html>"""
