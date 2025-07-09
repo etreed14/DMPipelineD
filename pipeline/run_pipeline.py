@@ -1,75 +1,35 @@
-"""
-run_pipeline.py — CLI entry-point (GPT-3.5-turbo, with transcript compression)
-
-Example:
-    python -m pipeline.run_pipeline \
-        --file Calls/2025/July/08/Din7-8Transcript.txt \
-        --title SportsBetting
-"""
+# run_pipeline.py — Minimal Stage A-only version (clean HTML + compression)
 
 import argparse
 from pathlib import Path
 
 from pipeline.llm_calls import LLMClient
-from pipeline import formatter
-from pipeline.utils import compress_transcript  # ← NEW
-
-from pipeline.PromptStages import (
-    prompt_stage_a,
-    prompt_stage_b,
-    prompt_stage_c,
-    prompt_stage_d,
-    prompt_stage_e,
-)
-
-
-def process_file(input_path: Path, title: str) -> str:
-    """Simplified pipeline used for unit tests."""
-    client = LLMClient(model="gpt-4o")
-    text = input_path.read_text()
-    result = client.chat("You are an analyst.", text)  # ✅ 2 arguments now
-    parts = result.split("\n", 1)
-    summary = parts[0]
-    details = parts[1] if len(parts) > 1 else ""
-    return f"<h1>{summary}</h1><p>{details}</p>"
+from pipeline.prompts import promptV9a
+from pipeline.utils import compress_transcript
 
 
 def run_pipeline(input_path: Path, title: str) -> None:
-    from pipeline.utils import compress_transcript
-    transcript = compress_transcript(input_path.read_text(encoding="utf-8"))
+    # 1. Load + compress transcript
+    raw_text = input_path.read_text(encoding="utf-8")
+    transcript = compress_transcript(raw_text)
+
+    # 2. Run Stage A only
     client = LLMClient(model="gpt-4o")
+    result = client.chat(promptV9a, transcript)
 
-    print("🟡 Stage A …")
-    a_out = prompt_stage_a.run(transcript, client)
-    print("🟢 Stage A ✔")
+    # 3. Save clean HTML (light mode, no dark styling)
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>{title}</title></head>
+<body><h1>{title}</h1><pre>{result.strip()}</pre></body></html>"""
 
-    print("🟡 Stage B …")
-    b_out = prompt_stage_b.run(transcript, client)
-    print("🟢 Stage B ✔")
-
-    merged = f"### STAGE A ###\n{a_out.strip()}\n\n### STAGE B ###\n{b_out.strip()}"
-
-    print("🟡 Stage C …")
-    c_out = prompt_stage_c.run(merged, client)
-    print("🟢 Stage C ✔")
-
-    print("🟡 Stage D …")
-    d_out = prompt_stage_d.run(c_out, client)
-    print("🟢 Stage D ✔")
-
-    print("🟡 Stage E …")
-    e_out = prompt_stage_e.run(d_out, client)
-    print("🟢 Stage E ✔")
-
-    html = formatter.build_html(title=title, body=e_out)
-    output_path = input_path.with_name(input_path.stem.replace("Transcript", title) + ".html")
-    output_path.write_text(html, encoding="utf-8")
-    print(f"✅ Pipeline complete — HTML saved to:\n{output_path.resolve()}")
+    out_path = input_path.with_suffix(".html")
+    out_path.write_text(html, encoding="utf-8")
+    print(f"✅ Summary saved to: {out_path.resolve()}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file",  required=True, help="Path to Din7-8Transcript.txt")
-    parser.add_argument("--title", required=True, help="Meeting title (e.g. SportsBetting)")
+    parser.add_argument("--file",  required=True, help="Path to transcript text file")
+    parser.add_argument("--title", required=True, help="Title for HTML output")
     args = parser.parse_args()
     run_pipeline(Path(args.file), args.title)
