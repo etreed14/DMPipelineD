@@ -35,12 +35,13 @@ def run_pipeline(input_path: Path, _ignored_title: str) -> None:
 
     # 5. Save light-mode HTML summary
     summary_path = input_path.with_name(f"{base}.html")
+    formatted_summary = summary.strip().replace('\n', '<br>')
     html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>{generated_title}</title></head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6;">
-  <h1>{generated_title}</h1>
-  <div>{summary.strip().replace('\n', '<br>')}</div>
-</body></html>"""
+    <html><head><meta charset="utf-8"><title>{generated_title}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h1>{generated_title}</h1>
+      <div>{formatted_summary}</div>
+    </body></html>"""
     summary_path.write_text(html, encoding="utf-8")
     print(f"✅ Summary saved → {summary_path.resolve()}")
 
