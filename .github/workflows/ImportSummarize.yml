@@ -10,7 +10,7 @@ permissions:
   contents: write            # we push the moved/summary files back
 
 jobs:
-  ingest:
+  DeMatteotizing:
     runs-on: ubuntu-latest
 
     steps:
